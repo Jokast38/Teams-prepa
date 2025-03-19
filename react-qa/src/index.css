@@ -42,6 +42,20 @@ h1 {
   line-height: 1.1;
 }
 
+.user-menu-button {
+  background: transparent !important; /* Fond transparent */
+  border: none; /* Supprime les bordures */
+  padding: 0; /* Supprime les marges internes */
+}
+
+.user-menu-button:hover {
+  background-color: rgba(255, 255, 255, 0.1); /* Optionnel : léger fond au survol */
+}
+
+.user-menu-button:focus {
+  outline: none; /* Supprime l'outline par défaut */
+}
+
 button {
   border-radius: 8px;
   border: 1px solid transparent;

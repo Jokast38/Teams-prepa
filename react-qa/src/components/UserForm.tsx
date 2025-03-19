@@ -1,143 +1,106 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Importation de useNavigate
 import axios from "axios";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const UserForm = () => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
+    password: "",
   });
 
-  const [errors, setErrors] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-  });
-
-  const [error, setError] = useState<string | null>(null);
-
-  const queryClient = useQueryClient();
-
-  const mutation = useMutation({
-    mutationFn: async (newUser: typeof formData) => {
-      return axios.post("http://localhost:3003/users", newUser);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      setFormData({ firstName: "", lastName: "", email: "" }); // Réinitialisation du formulaire
-      setErrors({ firstName: "", lastName: "", email: "" });
-      setError(null);
-    },
-    onError: (err) => {
-      setError("Une erreur est survenue. Veuillez réessayer.");
-      console.error("Erreur:", err);
-    },
-  });
+  const navigate = useNavigate(); // Hook pour rediriger l'utilisateur
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-
-    // Validation en temps réel
-    if (name === "firstName" && value.trim() === "") {
-      setErrors((prev) => ({ ...prev, firstName: "Le prénom est obligatoire." }));
-    } else if (name === "lastName" && value.trim() === "") {
-      setErrors((prev) => ({ ...prev, lastName: "Le nom est obligatoire." }));
-    } else if (name === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      setErrors((prev) => ({ ...prev, email: "L'email n'est pas valide." }));
-    } else {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.firstName || !formData.lastName || !formData.email) {
-      setError("Tous les champs sont obligatoires.");
-      return;
+    try {
+      // Requête pour l'inscription
+      const response = await axios.post("http://localhost:3003/auth/register", {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+      });
+      console.log("Registration successful:", response.data);
+      toast.success("Inscription réussie !");
+      setTimeout(() => {
+        navigate("/dashbord"); // Redirige vers la page de connexion après l'inscription
+      }, 1000);
+    } catch (error) {
+      console.error("Erreur :", error);
+      toast.error("Une erreur est survenue. Veuillez réessayer.");
     }
-    mutation.mutate(formData);
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white dark:bg-gray-800 rounded-lg px-6 py-8 ring shadow-xl ring-gray-900/5 max-w-md mx-auto"
-    >
-      <div>
-        <span className="inline-flex items-center justify-center rounded-md bg-indigo-500 p-2 shadow-lg">
-          <svg
-            className="h-6 w-6 stroke-white"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 4v16m8-8H4"
+    <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen flex items-center justify-center">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 max-w-md w-full">
+        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">
+          Inscription
+        </h2>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-gray-700 dark:text-gray-300 mb-2">Prénom</label>
+            <input
+              type="text"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              className="w-full p-2 border rounded text-gray-800 dark:text-gray-200 dark:bg-gray-700"
+              placeholder="Entrez votre prénom"
             />
-          </svg>
-        </span>
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 dark:text-gray-300 mb-2">Nom</label>
+            <input
+              type="text"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              className="w-full p-2 border rounded text-gray-800 dark:text-gray-200 dark:bg-gray-700"
+              placeholder="Entrez votre nom"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 dark:text-gray-300 mb-2">Email</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full p-2 border rounded text-gray-800 dark:text-gray-200 dark:bg-gray-700"
+              placeholder="Entrez votre email"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 dark:text-gray-300 mb-2">Mot de passe</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full p-2 border rounded text-gray-800 dark:text-gray-200 dark:bg-gray-700"
+              placeholder="Entrez votre mot de passe"
+            />
+          </div>
+          <button
+            type="submit"
+            className="bg-blue-500 text-white px-4 py-2 rounded w-full hover:bg-blue-600 transition"
+          >
+            S'inscrire
+          </button>
+        </form>
       </div>
-      <h2 className="text-gray-900 dark:text-white mt-5 text-lg font-bold text-center">
-        Ajouter un utilisateur
-      </h2>
-
-      {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-
-      <div className="mb-4">
-        <input
-          type="text"
-          name="firstName"
-          placeholder="Prénom"
-          value={formData.firstName}
-          onChange={handleChange}
-          className={`border p-2 w-full rounded text-gray-800 dark:text-gray-200 dark:bg-gray-700 ${
-            errors.firstName ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-          }`}
-        />
-        {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
-      </div>
-
-      <div className="mb-4">
-        <input
-          type="text"
-          name="lastName"
-          placeholder="Nom"
-          value={formData.lastName}
-          onChange={handleChange}
-          className={`border p-2 w-full rounded text-gray-800 dark:text-gray-200 dark:bg-gray-700 ${
-            errors.lastName ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-          }`}
-        />
-        {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
-      </div>
-
-      <div className="mb-4">
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          className={`border p-2 w-full rounded text-gray-800 dark:text-gray-200 dark:bg-gray-700 ${
-            errors.email ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-          }`}
-        />
-        {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-      </div>
-
-      <button
-        type="submit"
-        className="bg-blue-500 dark:bg-blue-600 text-white px-4 py-2 rounded w-full disabled:opacity-50"
-        disabled={mutation.status === "pending"}
-      >
-        {mutation.status === "pending" ? "Ajout en cours..." : "Ajouter"}
-      </button>
-    </form>
+      <ToastContainer />
+    </div>
   );
 };
 
