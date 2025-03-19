@@ -1,0 +1,195 @@
+:::UserList::::
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import './css/UserList.css' // Ajout du fichier CSS;
+
+
+
+interface User {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+const fetchUsers = async (): Promise<User[]> => {
+  const { data } = await axios.get("http://localhost:3003/users");
+  return data;
+};
+
+const UserList = () => {
+  const { data, error, isLoading } = useQuery<User[]>({
+    queryKey: ["users"],
+    queryFn: fetchUsers,
+  });
+
+  if (isLoading)
+    return (
+      <div className="flex justify-center items-center h-20">
+        <p className="text-blue-500 font-semibold">Chargement des utilisateurs...</p>
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="text-center text-red-500">
+        <p>Erreur lors du chargement des utilisateurs.</p>
+      </div>
+    );
+
+  return (
+    <div className="p-4">
+      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Liste des utilisateurs</h2>
+      <ul role="list" className="divide-y divide-gray-100">
+        {data?.map((user: User) => (
+          <li key={user.id} className="flex justify-between gap-x-6 py-5">
+            <div className="flex min-w-0 gap-x-4">
+              <img
+                alt=""
+                src={`https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=random`}
+                className="h-12 w-12 flex-none rounded-full bg-gray-50"
+              />
+              <div className="min-w-0 flex-auto">
+                <p className="text-sm font-semibold text-gray-900">
+                  {user.firstName} {user.lastName}
+                </p>
+                <p className="mt-1 truncate text-xs text-gray-500">{user.email}</p>
+              </div>
+            </div>
+            <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
+              <p className="text-sm text-gray-900">Utilisateur</p>
+              <div className="mt-1 flex items-center gap-x-1.5">
+                <div className="flex-none rounded-full bg-emerald-500/20 p-1">
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                </div>
+                <p className="text-xs text-gray-500">En ligne</p>
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default UserList;
+:::Fin UserList:::
+
+:::UserForm:::
+import { useState } from "react";
+import axios from "axios";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+
+const UserForm = () => {
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+  });
+
+  const [errors, setErrors] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+  });
+
+  const [error, setError] = useState<string | null>(null);
+
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async (newUser: typeof formData) => {
+      return axios.post("http://localhost:3003/users", newUser);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      setFormData({ firstName: "", lastName: "", email: "" }); // Réinitialisation du formulaire
+      setErrors({ firstName: "", lastName: "", email: "" });
+      setError(null);
+    },
+    onError: (err) => {
+      setError("Une erreur est survenue. Veuillez réessayer.");
+      console.error("Erreur:", err);
+    },
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+
+    // Validation en temps réel
+    if (name === "firstName" && value.trim() === "") {
+      setErrors((prev) => ({ ...prev, firstName: "Le prénom est obligatoire." }));
+    } else if (name === "lastName" && value.trim() === "") {
+      setErrors((prev) => ({ ...prev, lastName: "Le nom est obligatoire." }));
+    } else if (name === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      setErrors((prev) => ({ ...prev, email: "L'email n'est pas valide." }));
+    } else {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.firstName || !formData.lastName || !formData.email) {
+      setError("Tous les champs sont obligatoires.");
+      return;
+    }
+    mutation.mutate(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="p-4 border rounded shadow-md max-w-md mx-auto bg-white">
+      <h2 className="text-lg font-bold mb-4 text-center">Ajouter un utilisateur</h2>
+
+      {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+
+      <div className="mb-4">
+        <input
+          type="text"
+          name="firstName"
+          placeholder="Prénom"
+          value={formData.firstName}
+          onChange={handleChange}
+          className={`border p-2 w-full rounded ${errors.firstName ? "border-red-500" : "border-gray-300"}`}
+        />
+        {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
+      </div>
+
+      <div className="mb-4">
+        <input
+          type="text"
+          name="lastName"
+          placeholder="Nom"
+          value={formData.lastName}
+          onChange={handleChange}
+          className={`border p-2 w-full rounded ${errors.lastName ? "border-red-500" : "border-gray-300"}`}
+        />
+        {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
+      </div>
+
+      <div className="mb-4">
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={handleChange}
+          className={`border p-2 w-full rounded ${errors.email ? "border-red-500" : "border-gray-300"}`}
+        />
+        {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+      </div>
+
+      <button
+        type="submit"
+        className="bg-blue-500 text-white px-4 py-2 rounded w-full disabled:opacity-50"
+        disabled={mutation.status === "pending"}
+      >
+        {mutation.status === "pending" ? "Ajout en cours..." : "Ajouter"}
+      </button>
+    </form>
+  );
+};
+
+export default UserForm;
+:::Fin UserForm:::

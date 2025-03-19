@@ -1,0 +1,128 @@
+/* filepath: c:\wamp64\www\PMU-prepa\react-qa\src\index.css */
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  height: 100%; /* Assure que html et body occupent toute la hauteur */
+  margin: 0; /* Supprime les marges par défaut */
+  padding: 0; /* Supprime les paddings par défaut */
+  display: flex;
+  flex-direction: column; /* Permet d'empiler les éléments verticalement */
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: var(--color-indigo-500);
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #050512;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Styles pour l'indicateur de chargement */
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(720deg) scale(0.5);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    letter-spacing: 5px;
+    left: calc(50% + 5px);
+  }
+  50% {
+    letter-spacing: 2.5px;
+    left: 50%;
+  }
+}
+
+.loading {
+  animation: fadein 2s;
+}
+.spinner-wrapper {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  position: absolute;
+  z-index: 15;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem; /* Ajoute un espace entre le spinner et le texte */
+}
+
+.spinner-text {
+  color: #646cff;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  font: bold 10px sans-serif;
+  animation: pulse 1.5s infinite;
+}
+
+.spinner {
+  margin: 0;
+  display: block;
+  border: 24px solid #646cff;
+  width: 48px; /* Taille du spinner */
+  height: 48px; /* Taille du spinner */
+  border-left-color: transparent;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 1.5s infinite;
+}
