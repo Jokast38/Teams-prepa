@@ -140,3 +140,45 @@ button:focus-visible {
   border-radius: 50%;
   animation: spin 1.5s infinite;
 }
+
+/* Styles pour les boutons de like et de commentaire */
+.like_button,
+.comments_button {
+  background: transparent; /* Supprime le fond */
+  border: none; /* Supprime les bordures */
+  padding: 0; /* Supprime les marges internes */
+  cursor: pointer; /* Change le curseur pour indiquer un bouton cliquable */
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* Ajoute un espace entre l'icône et le texte */
+  color: var(--color-gray-500); /* Couleur par défaut */
+  transition: color 0.3s ease; /* Transition fluide pour les changements de couleur */
+}
+
+.like_button:hover,
+.comments_button:hover {
+  color: var(--color-red-500); /* Couleur rouge au survol pour le bouton like */
+}
+
+.like_button:focus,
+.comments_button:focus {
+  outline: none; /* Supprime l'outline par défaut */
+}
+
+.comments_button:hover {
+  color: var(--color-blue-500); /* Couleur bleue au survol pour le bouton commentaire */
+}
+
+/* Thème sombre */
+.dark .like_button,
+.dark .comments_button {
+  color: var(--color-gray-400); /* Couleur par défaut en mode sombre */
+}
+
+.dark .like_button:hover {
+  color: var(--color-red-400); /* Couleur rouge au survol en mode sombre */
+}
+
+.dark .comments_button:hover {
+  color: var(--color-blue-400); /* Couleur bleue au survol en mode sombre */
+}

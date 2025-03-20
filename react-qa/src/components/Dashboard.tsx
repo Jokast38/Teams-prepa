@@ -83,6 +83,12 @@ const Dashboard = () => {
         },
     });
 
+    const handleEditClick = (id: string) => {
+        console.log("ID de l'utilisateur cliqué :", id);
+        navigate(`/edit/${id}`); // Redirige manuellement vers la page de modification
+    };
+
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setNewPost({ ...newPost, [name]: value });
@@ -275,6 +281,7 @@ const Dashboard = () => {
                                                 <Menu.Item>
                                                     {({ active }) => (
                                                         <a
+                                                            onClick={() => handleEditClick(user.id)}
                                                             href="#"
                                                             className={`block px-4 py-2 text-sm ${active ? "bg-gray-100" : ""
                                                                 }`}
@@ -341,18 +348,23 @@ const Dashboard = () => {
                                 <p className="text-gray-600 dark:text-gray-400">{post.content}</p>
                             </div>
                             <div className="flex items-center space-x-4">
+                                {/* Bouton Like */}
                                 <button
+                                    id="like_button"
                                     onClick={() => handleLike(post._id)}
-                                    className="flex items-center text-gray-500 dark:text-gray-400 hover:text-red-500"
+                                    className="like_button" // Applique la classe CSS pour le bouton like
                                 >
-                                    <HeartIcon className="h-5 w-5 mr-1" />
+                                    <HeartIcon className="h-5 w-5" />
                                     <span>{post.likes.length}</span>
                                 </button>
+
+                                {/* Bouton Commentaire */}
                                 <button
+                                    id="comments_button"
                                     onClick={() => handleToggleComments(post._id)}
-                                    className="flex items-center text-gray-500 dark:text-gray-400 hover:text-blue-500"
+                                    className="comments_button" // Applique la classe CSS pour le bouton commentaire
                                 >
-                                    <ChatBubbleLeftEllipsisIcon className="h-5 w-5 mr-1" />
+                                    <ChatBubbleLeftEllipsisIcon className="h-5 w-5" />
                                     <span>{post.comments.length}</span>
                                 </button>
                             </div>
