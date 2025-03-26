@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaTrash } from "react-icons/fa"; // Importation de l'icône poubelle
 import { Link } from "react-router-dom"; // Importation de Link pour la navigation
@@ -10,22 +11,43 @@ interface User {
     email: string;
 }
 
+
 const fetchUsers = async (): Promise<User[]> => {
-    const { data } = await axios.get("http://localhost:3003/users");
+    const token = localStorage.getItem("token"); // Récupère le token JWT depuis le localStorage
+    if (!token) {
+        throw new Error("Utilisateur non authentifié");
+    }
+
+    const { data } = await axios.get("http://localhost:3003/users", {
+        headers: {
+            Authorization: `Bearer ${token}`, // Ajoute le token JWT dans les en-têtes
+        },
+    });
+
     return data.map((user) => ({
-        id: user._id, // Remappe `_id` en `id`
+        id: user.id, // Utilise `id` directement
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
     }));
 };
 
-const deleteUser = async (id: string) => {
-    await axios.delete(`http://localhost:3003/users/${id}`);
-};
 
+const deleteUser = async (id: string) => {
+    const token = localStorage.getItem("token"); // Récupère le token JWT depuis le localStorage
+    if (!token) {
+        throw new Error("Utilisateur non authentifié");
+    }
+
+    await axios.delete(`http://localhost:3003/users/${id}`, {
+        headers: {
+            Authorization: `Bearer ${token}`, // Ajoute le token JWT dans les en-têtes
+        },
+    });
+};
 const UserList = () => {
     const queryClient = useQueryClient();
+    const navigate = useNavigate();
 
     const { data, error, isLoading } = useQuery<User[]>({
         queryKey: ["users"],
@@ -41,6 +63,12 @@ const UserList = () => {
             console.error("Erreur lors de la suppression :", error);
         },
     });
+
+
+    const handleEditClick = (id: string) => {
+        console.log("ID de l'utilisateur cliqué :", id);
+        navigate(`/edit/${id}`); // Redirige manuellement vers la page de modification
+    };
 
     if (isLoading) {
         return (
@@ -97,14 +125,16 @@ const UserList = () => {
                                     to={`/edit/${user.id}`} // Redirige vers la page de modification
                                     className="text-blue-500 hover:text-blue-700 transition"
                                     title="Modifier l'utilisateur"
-                                    onClick={() => console.log("ID de l'utilisateur cliqué :", user.id)} // Ajoutez un log ici
-                                >
+                                    onClick={() => handleEditClick(user.id)}> {/* Passe l'ID de l'utilisateur à modifier */}
                                     Modifier
                                 </Link>
                                 <button
-                                    onClick={() => mutation.mutate(user.id)} // Passe l'ID de l'utilisateur à supprimer
-                                    className="text-white hover:text-gray-300 transition"
-                                    title="Supprimer l'utilisateur"
+                                   onClick={() => {
+                                    console.log("ID de l'utilisateur à supprimer :", user.id); // Vérifie l'ID
+                                    mutation.mutate(user.id);
+                                }}
+                                className="text-white hover:text-gray-300 transition"
+                                title="Supprimer l'utilisateur"
                                 >
                                     <FaTrash className="h-5 w-5" />
                                 </button>
@@ -113,7 +143,7 @@ const UserList = () => {
                     ))}
                 </ul>
             </div>
-        </div>
+        </div >
     );
 };
 

@@ -193,3 +193,180 @@ const UserForm = () => {
 
 export default UserForm;
 :::Fin UserForm:::
+
+
+:::uzodgu::::
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { Disclosure, Menu, Transition } from "@headlessui/react";
+import { Bars3Icon, BellIcon, XMarkIcon, HeartIcon, ChatBubbleLeftEllipsisIcon } from "@heroicons/react/24/outline";
+
+// Fonction pour récupérer les posts
+const fetchPosts = async () => {
+    const { data } = await axios.get("http://localhost:3003/posts");
+    return data;
+};
+
+// Fonction pour liker un post
+const likePost = async (postId: string) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        throw new Error("Utilisateur non authentifié");
+    }
+    const { data } = await axios.post(`http://localhost:3003/posts/${postId}/like`, {}, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return data;
+};
+
+// Fonction pour récupérer les informations de l'utilisateur connecté
+const fetchUserInfo = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        throw new Error("Utilisateur non authentifié");
+    }
+    const { data } = await axios.get("http://localhost:3003/auth/me", {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return data;
+};
+
+const Dashboard = () => {
+    const queryClient = useQueryClient();
+    const [newPost, setNewPost] = useState({ title: "", content: "" });
+
+    // Récupération des posts
+    const { data: posts, isLoading, error } = useQuery({
+        queryKey: ["posts"],
+        queryFn: fetchPosts,
+    });
+
+    // Récupération des informations de l'utilisateur connecté
+    const { data: userInfo } = useQuery({
+        queryKey: ["userInfo"],
+        queryFn: fetchUserInfo,
+    });
+
+    // Mutation pour liker un post
+    const likeMutation = useMutation({
+        mutationFn: likePost,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["posts"] }); // Recharge les posts après un like
+        },
+        onError: () => {
+            toast.error("Erreur lors du like.");
+        },
+    });
+
+    const handleLike = (postId: string) => {
+        likeMutation.mutate(postId);
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setNewPost({ ...newPost, [name]: value });
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newPost.title || !newPost.content) {
+            toast.error("Veuillez remplir tous les champs.");
+            return;
+        }
+        // Mutation pour créer un post (non modifiée ici)
+    };
+
+    if (isLoading) return <p>Chargement des posts...</p>;
+    if (error) return <p>Erreur lors du chargement des posts.</p>;
+
+    return (
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+            {/* Navbar */}
+            <Disclosure as="nav" className="bg-gray-800">
+                {({ open }) => (
+                    <>
+                        <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+                            <div className="relative flex h-16 items-center justify-between">
+                                <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
+                                    <Disclosure.Button className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                                        <span className="sr-only">Open main menu</span>
+                                        {open ? (
+                                            <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
+                                        ) : (
+                                            <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
+                                        )}
+                                    </Disclosure.Button>
+                                </div>
+                                <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+                                    <div className="flex flex-shrink-0 items-center">
+                                        <img
+                                            className="h-8 w-auto"
+                                            src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500"
+                                            alt="Your Company"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+                                    <span className="text-white">{`${userInfo?.firstName} ${userInfo?.lastName}`}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                )}
+            </Disclosure>
+
+            {/* Main Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+                <ToastContainer />
+                <div className="space-y-4">
+                    {posts.map((post: any) => (
+                        <div
+                            key={post._id}
+                            className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col space-y-4"
+                        >
+                            <div className="flex items-center space-x-4">
+                                <img
+                                    className="h-10 w-10 rounded-full bg-gray-50 dark:bg-gray-700"
+                                    src={`https://ui-avatars.com/api/?name=${post.author.firstName}+${post.author.lastName}&background=random`}
+                                    alt={`${post.author.firstName} ${post.author.lastName}`}
+                                />
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                        {post.author.firstName} {post.author.lastName}
+                                    </p>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-800 dark:text-white">{post.title}</h3>
+                                <p className="text-gray-600 dark:text-gray-400">{post.content}</p>
+                            </div>
+                            <div className="flex items-center space-x-4">
+                                <button
+                                    onClick={() => handleLike(post._id)}
+                                    className="flex items-center text-gray-500 dark:text-gray-400 hover:text-red-500"
+                                >
+                                    <HeartIcon className="h-5 w-5 mr-1" />
+                                    <span>{post.likes.length}</span>
+                                </button>
+                                <button className="flex items-center text-gray-500 dark:text-gray-400 hover:text-blue-500">
+                                    <ChatBubbleLeftEllipsisIcon className="h-5 w-5 mr-1" />
+                                    <span>{post.comments.length}</span>
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Dashboard;
+::::eigxe:::
